@@ -1,31 +1,10 @@
 package main
 
-import "strconv"
+import (
+	"log"
+	"strconv"
+)
 
-// sum produce sum of sequence from 1 to n
-func sum(n int) int {
-	if n <= 0 {
-		return 0
-	}
-	return n + sum(n-1)
-}
-
-// usual add
-func add2(a, b int) int {
-	return a + b
-}
-
-// func style add
-func add1(a int) func(int) int {
-	return func(b int) int {
-		return a + b
-	}
-}
-
-// func style add, but prettier (no)
-var add = func(a int) func(int) int { return func(b int) int { return a + b } }
-
-// Pair is pair :-|
 type Pair struct {
 	a, b interface{}
 }
@@ -44,6 +23,15 @@ var snd = func(p Pair) interface{} { return p.b }
 var head = fst
 var tail = snd
 
+func gen(low int) func(int) interface{} {
+	return func(high int) interface{} {
+		if low > high {
+			return nil
+		}
+		return pair(low)(gen(low + 1)(high))
+	}
+}
+
 var list2arr = func(xs Pair) []interface{} {
 	var res []interface{}
 	for {
@@ -55,24 +43,6 @@ var list2arr = func(xs Pair) []interface{} {
 	}
 }
 
-var arr2list = func(xs []interface{}) Pair {
-	var res interface{}
-	for i := len(xs) - 1; i >= 0; i-- {
-		res = pair(xs[i])(res)
-	}
-	return res.(Pair)
-}
-
-func gen(low int) func(int) interface{} {
-	return func(high int) interface{} {
-		if low > high {
-			return nil
-		}
-		return pair(low)(gen(low + 1)(high))
-	}
-}
-
-// Map is map
 func Map(f func(interface{}) interface{}) func(Pair) interface{} {
 	return func(xs Pair) interface{} {
 		if tail(xs) == nil {
@@ -82,7 +52,6 @@ func Map(f func(interface{}) interface{}) func(Pair) interface{} {
 	}
 }
 
-// IntStrMap is map from ints to strs
 func IntStrMap(f func(int) string) func(Pair) interface{} {
 	return func(xs Pair) interface{} {
 		if tail(xs) == nil {
@@ -93,6 +62,13 @@ func IntStrMap(f func(int) string) func(Pair) interface{} {
 }
 
 func fizzbuzz(n int) string {
-	s := map[bool]string{true: "Fizz", false: ""}[n%3 == 0] + map[bool]string{true: "Buzz", false: ""}[n%5 == 0]
+	// no assignment in functions? yep?
+	s := map[bool]string{true: "Fizz", false: ""}[n%3 == 0] +
+		map[bool]string{true: "Buzz", false: ""}[n%5 == 0]
 	return map[bool]string{true: s, false: strconv.Itoa(n)}[s != ""]
+}
+
+func main() {
+	res := list2arr(IntStrMap(fizzbuzz)(gen(1)(100).(Pair)).(Pair))
+	log.Println(res)
 }
